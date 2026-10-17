@@ -41,7 +41,7 @@ read an Excel-only conditional-formatting extension.
 | Local provenance attestation + verify (builder marked UNTRUSTED) | **PASSED** - demo of the mechanism only | `supply-chain/cosign-verify-provenance-attestation.json` |
 | Negative test: tampered image (new digest) fails verification | **PASSED** ("no signatures found") | `supply-chain/cosign-verify-tampered.txt` |
 | Secret scan of all committable files (gitleaks 8.30.1) | **PASSED** - no leaks (1 public GPG fingerprint allow-listed with reason) | `validation/secret-scan.txt` |
-| GitHub Actions `ci.yml` run on GitHub | **BLOCKED** - repo not pushed (needs your approval) | - |
+| GitHub Actions `ci.yml` run on GitHub (4 jobs: tests + Postgres + coverage gate, config validation, OpenTofu + LocalStack plan, image + Trivy gate + SBOM) | **PASSED** on commit 33e4a39 (first run on 7334333 **FAILED**: one ruff E501 in a late-added script - fixed) | [https://github.com/FarhanOsMo/healthqueue-capstone-/actions/runs/39079615363](https://github.com/FarhanOsMo/healthqueue-capstone-/actions/runs/39079615363) |
 | `release.yml`: GHCR push, keyless signing, GitHub SLSA provenance, `gh attestation verify`, GitOps PR | **BLOCKED** - needs push + tag | - |
 
 ## 3. Infrastructure as Code
@@ -122,4 +122,5 @@ PASS  reports/dora-analysis.xlsx  formulas=384  formula_errors=0  checks='ALL CH
 |---|---|---|---|---|
 | Static checks (`validate_all.sh`) | 18 | 0 | 0 | 0 |
 | Dynamic local checks (supply chain, OpenTofu, GitOps, load test, Compose) | all listed | 0 | 2 (apply - by rule; Alertmanager) | 0 |
-| Needs GitHub push / AWS | - | - | - | 4 (CI run, release run, Argo from GitHub, AWS plan) |
+| GitHub CI | 4 jobs | 0 (after fix) | 0 | 0 |
+| Needs tag / AWS | - | - | - | 3 (release run, Argo from GitHub, AWS plan) |

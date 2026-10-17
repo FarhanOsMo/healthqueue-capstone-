@@ -7,7 +7,7 @@ Evidence paths are relative to the repository root. Scores are **provisional sel
 
 | # | Requirement | Implementation | Evidence | Status | Limitation / to reach Exemplary |
 |---|---|---|---|---|---|
-| R1 | CI/CD with automated build + test | `.github/workflows/ci.yml` (lint, SAST, pip-audit, pytest + Postgres, image build) | `reports/validation/*.txt` (local equivalents), actionlint pass | 🟡 | Push the repo so the workflow runs; screenshot the green run |
+| R1 | CI/CD with automated build + test | `.github/workflows/ci.yml` (lint, SAST, pip-audit, pytest + Postgres, image build) | GitHub Actions run [39079615363](https://github.com/FarhanOsMo/healthqueue-capstone-/actions/runs/39079615363) - all 4 jobs green | ✅ | Show the green run in the video |
 | R2 | Vulnerability scanning | Trivy image gate (fixable HIGH/CRITICAL) + Trivy IaC scan, digest-pinned post-incident Trivy | `reports/supply-chain/trivy-image-report.txt`, `reports/validation/trivy-config.txt` | ✅ | - |
 | R3 | SBOM generation | Syft SPDX + CycloneDX; SBOM signed attestation | `reports/supply-chain/sbom.*.json` | ✅ | - |
 | R4 | Artifact signing | Cosign keyless in `release.yml`; local key-based demo + verify + tamper test | `reports/supply-chain/cosign-*.json/txt` | ✅ local / 🟡 keyless | Run `release.yml` once (tag `v0.1.1`) |
@@ -18,7 +18,7 @@ Evidence paths are relative to the repository root. Scores are **provisional sel
 | R9 | Supply chain summary with SLSA alignment | `docs/supply-chain-security.md` | SLSA v1.2 references + GitHub docs; status per control | ✅ | No level claimed until release run |
 | R10 | Docs: architecture diagrams, runbooks, ADRs, README | `README.md`, `docs/architecture.md` (4 Mermaid diagrams + 1 in README), 6 ADRs, 5 runbooks, postmortem | link check | ✅ | - |
 | R11 | 8-10 min camera-on video | `docs/video-walkthrough-outline.md` (timestamps + checklist) | - | ⏳ | **You must record it** (face visible throughout) |
-| R12 | GitHub repository with artifacts | All files ready locally; remote is empty | `git status` | ⏳ | Commit + push (commands in the final summary) |
+| R12 | GitHub repository with artifacts | Pushed to github.com/FarhanOsMo/healthqueue-capstone- (`main`) | GitHub | ✅ | - |
 
 ## Category 1 - CI/CD Pipeline with Supply Chain Security (provisional 26/30)
 
@@ -27,10 +27,10 @@ actions pinned to full SHAs; Trivy gate that actually failed and was fixed at th
 signing + SBOM attestation + GitHub SLSA provenance + three verifications in CI; GitOps PR pinning the verified digest;
 local pipeline proves sign/attest/verify and tamper rejection; Dependabot; secret scan clean.
 
-**Prevents full marks:** the GitHub workflows have **not run yet** (repo not pushed) - CI pass, keyless signature
+**Prevents full marks:** CI now runs green on GitHub, but `release.yml` has **not run yet** - keyless signature
 and provenance are unproven in their real environment. No admission control in the cluster. SLSA L3 not reached.
 
-**To reach Exemplary:** push, let `ci.yml` run green, tag `v0.1.1` so `release.yml` publishes/signs/attests/verifies;
+**To reach Exemplary:** (CI done) tag `v0.1.1` so `release.yml` publishes/signs/attests/verifies;
 save the run URL + `gh attestation verify` output into `reports/`.
 
 ## Category 2 - Infrastructure as Code and GitOps Deployment (provisional 27/30)
@@ -87,12 +87,12 @@ project resources; validation report with honest PASSED/SKIPPED/BLOCKED.
 
 | Category | Score now | Likely after push + release run + video |
 |---|---|---|
-| 1 CI/CD + supply chain | 26 | 28-29 |
+| 1 CI/CD + supply chain | 27 | 28-29 |
 | 2 IaC + GitOps | 27 | 28 |
 | 3 DORA + toil | 28 | 28-29 |
 | 4 Observability + SRE | 28 | 28-29 |
 | 5 Design + documentation | 25 | 28 |
-| **Total** | **134 / 150** | **~140-143 / 150** |
+| **Total** | **135 / 150** | **~140-143 / 150** |
 
 ## Second, independent audit (re-inspected files, not earlier claims)
 

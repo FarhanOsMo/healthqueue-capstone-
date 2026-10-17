@@ -65,7 +65,7 @@ supply-chain/DORA/cost/readiness docs, rubric mapping, video outline, validation
 
 | Action | Why it needs you | Cost |
 |---|---|---|
-| `git commit` + `git push` to `origin` | publishing is your decision (commands in the final summary) | free |
+| ~~`git commit` + `git push`~~ | **done 2026-10-17 with approval**; CI green on GitHub | free |
 | Enabling branch protection, `release` environment, "allow Actions to create PRs" | GitHub repository settings | free |
 | Pushing a tag `v0.1.1` to run `release.yml` | creates public GHCR package + public Rekor entries | free for public repo |
 | Real AWS `plan`/`apply` | needs an AWS account; apply costs money | **not done** |
@@ -92,5 +92,7 @@ supply-chain/DORA/cost/readiness docs, rubric mapping, video outline, validation
 8. GitOps verify script had a stale-value wait loop -> fixed; added a positive-control probe for the NetworkPolicy test.
 9. **Local load test found a latency SLO breach (85.4% ≤ 300 ms)** -> connection pool in v0.1.1 -> 100% after a GitOps rollout.
 10. DORA finding text claimed a single top failure cause while two were tied -> corrected; removed an unsupported claim.
+12. Pushed with approval; first GitHub CI run failed on one ruff E501 in `scripts/check_links.py` (added after the
+    last local lint) -> fixed; coverage gate moved into CI where PostgreSQL always runs -> CI green.
 11. Secret scan initially scanned git-ignored local secrets -> now scans exactly the committable files; one public GPG
     fingerprint allow-listed with justification.
