@@ -1,0 +1,3 @@
+Checking observability/prometheus/slo-rules.yaml
+  SUCCESS: 18 rules found
+

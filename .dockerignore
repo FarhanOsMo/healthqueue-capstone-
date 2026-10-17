@@ -1,0 +1,7 @@
+# Only app/ and requirements.txt are needed in the image. Everything else is
+# excluded to keep the build context small and secrets out of layers.
+*
+!app/
+!requirements.txt
+**/__pycache__
+**/*.pyc

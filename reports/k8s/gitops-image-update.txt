@@ -1,0 +1,4 @@
+Committed: 30594a4 deploy(local): final verified 0.1.1 build + hardened Gitea + docs
+Pushed 30594a4 to Gitea
+Waiting for Argo CD to sync revision 30594a4 ...
+Argo CD: revision 30594a4  sync=Synced  health=Healthy

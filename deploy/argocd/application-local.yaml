@@ -1,0 +1,35 @@
+# Argo CD watches the Git repository and makes the cluster match
+# deploy/k8s/overlays/local. Nobody runs `kubectl apply` for the app itself.
+#
+# Source: the in-cluster Gitea server (zero-cost stand-in for GitHub that this
+# project can push to without publishing anything). After the repository is
+# pushed to GitHub, application-github.yaml points at GitHub instead.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: healthqueue-local
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io # deleting the app cleans up its resources
+spec:
+  project: healthqueue
+  source:
+    repoURL: http://gitea-http.gitops-local.svc.cluster.local:3000/hq-admin/healthqueue-capstone.git
+    targetRevision: main
+    path: deploy/k8s/overlays/local
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: healthqueue
+  syncPolicy:
+    automated:
+      prune: true # delete things removed from Git
+      selfHeal: true # undo manual changes made directly in the cluster
+    syncOptions:
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10

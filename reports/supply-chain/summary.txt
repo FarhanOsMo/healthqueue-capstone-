@@ -1,0 +1,5 @@
+image_ref=kind-registry:5000/healthqueue-api@sha256:583efbe90ec196a084ac129ded19e2cae9196ec16cc458d32ff156d3a7d71b9c
+app_version=0.1.1
+git_commit=uncommitted-working-tree
+generated_utc=2026-10-17T22:28:09Z
+signing=local test key, tlog upload disabled (NOT a trusted release signature)

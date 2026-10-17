@@ -1,0 +1,31 @@
+# Same as application-local.yaml but reconciling from the public GitHub repository.
+# Use after the repository has been pushed (Argo CD reads public repos for free,
+# no credentials needed). Changes then flow: PR -> review -> merge -> Argo CD sync.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: healthqueue-local
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: healthqueue
+  source:
+    repoURL: https://github.com/FarhanOsMo/healthqueue-capstone-.git
+    targetRevision: main
+    path: deploy/k8s/overlays/local
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: healthqueue
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - PruneLast=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 10s
+        factor: 2
+        maxDuration: 3m

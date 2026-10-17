@@ -1,0 +1,11 @@
+{
+  "buildDefinition": {
+    "buildType": "https://github.com/FarhanOsMo/healthqueue-capstone-/local-build@v1",
+    "externalParameters": {"source": "local working tree", "gitCommit": "uncommitted-working-tree", "appVersion": "0.1.1"},
+    "resolvedDependencies": [{"uri": "docker-image://python:3.13-slim", "digest": {"sha256": "70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f"}}]
+  },
+  "runDetails": {
+    "builder": {"id": "local-developer-workstation (UNTRUSTED - demo only)"},
+    "metadata": {"invocationId": "local-20261017T222748Z", "startedOn": "2026-10-17T22:27:48Z"}
+  }
+}

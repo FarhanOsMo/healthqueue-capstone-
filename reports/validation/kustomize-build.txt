@@ -1,0 +1,2 @@
+reports/k8s/rendered-local.yaml:12
+reports/k8s/rendered-production.yaml:11

@@ -1,0 +1,26 @@
+# Local kind environment - reconciled by Argo CD (deploy/argocd/application-local.yaml).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+labels:
+  - pairs:
+      app.kubernetes.io/instance: healthqueue-local
+images:
+  # Immutable digest of the image built, scanned, SBOM'd and signed by
+  # scripts/local_supply_chain.sh. Updated with scripts/set_image.sh (a Git commit),
+  # never by editing the live cluster.
+  - name: healthqueue-api
+    newName: kind-registry:5000/healthqueue-api
+    digest: sha256:583efbe90ec196a084ac129ded19e2cae9196ec16cc458d32ff156d3a7d71b9c
+patches:
+  - target:
+      kind: Service
+      name: healthqueue-api
+    patch: |-
+      - op: replace
+        path: /spec/type
+        value: NodePort
+      - op: add
+        path: /spec/ports/0/nodePort
+        value: 30080

@@ -1,0 +1,57 @@
+
+=== 1/6 kind cluster 'healthqueue'
+Creating cluster "healthqueue" ...
+ • Ensuring node image (kindest/node:v1.37.0) 🖼️  ...
+ ✓ Ensuring node image (kindest/node:v1.37.0) 🖼️
+ • Preparing nodes 📦   ...
+ ✓ Preparing nodes 📦 
+ • Writing configuration 📜  ...
+ ✓ Writing configuration 📜
+ • Starting control-plane 🕹️  ...
+ ✓ Starting control-plane 🕹️
+ • Installing CNI 🔌  ...
+ ✓ Installing CNI 🔌
+ • Installing StorageClass 💾  ...
+ ✓ Installing StorageClass 💾
+ • Waiting ≤ 2m0s for control-plane = Ready ⏳  ...
+ ✓ Waiting ≤ 2m0s for control-plane = Ready ⏳
+ • Ready after 11s 💚
+Set kubectl context to "kind-healthqueue"
+You can now use your cluster with:
+
+kubectl cluster-info --context kind-healthqueue --kubeconfig '/c/Users/bisha/Videos/Farhan Dump/DevOps/Assignment 7/healthqueue-capstone-/.kube/healthqueue.kubeconfig'
+
+Have a question, bug, or feature request? Let us know! https://kind.sigs.k8s.io/#community 🙂
+Kubernetes control plane is running at https://127.0.0.1:58264
+
+=== 2/6 Local registry kind-registry:5000 (trusted over plain HTTP by the nodes only)
+registry configured on nodes
+
+=== 3/6 Argo CD v3.5.5
+Waiting for deployment "argocd-repo-server" rollout to finish: 0 of 1 updated replicas are available...
+deployment "argocd-repo-server" successfully rolled out
+deployment "argocd-server" successfully rolled out
+partitioned roll out complete: 1 new pods have been updated...
+Waiting for partitioned roll out to finish: 0 out of 1 new pods have been updated...
+Waiting for 1 pods to be ready...
+Waiting for 1 pods to be ready...
+Waiting for 1 pods to be ready...
+partitioned roll out complete: 1 new pods have been updated...
+
+=== 4/6 Gitea (local Git server for Argo CD)
+Waiting for deployment "gitea" rollout to finish: 0 of 1 updated replicas are available...
+deployment "gitea" successfully rolled out
+
+=== 5/6 Namespace + database Secret (random, not in Git)
+secret created
+
+=== 6/6 Argo CD project (guard rails)
+appproject.argoproj.io/healthqueue created
+
+Platform ready.
+  export KUBECONFIG="/c/Users/bisha/Videos/Farhan Dump/DevOps/Assignment 7/healthqueue-capstone-/.kube/healthqueue.kubeconfig"
+Next: bash scripts/gitops_publish.sh     # push manifests to Gitea + register the Argo CD app
+Argo CD UI:  kubectl -n argocd port-forward svc/argocd-server 8443:443
+             user: admin  password: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+Gitea UI:    kubectl -n gitops-local port-forward svc/gitea-http 3000:3000   (user hq-admin, password in .local/gitea-admin-password)
+exit=0

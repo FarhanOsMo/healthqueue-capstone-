@@ -1,0 +1,93 @@
+# Unit tests for the SLO alert rules.  Run:
+#   docker run --rm -v "$PWD:/w" -w /w --entrypoint promtool prom/prometheus \
+#     test rules tests/prometheus/slo-rules.test.yaml
+rule_files:
+  - ../../observability/prometheus/slo-rules.yaml
+
+evaluation_interval: 30s
+
+tests:
+  # 1. Healthy service: 0.05% errors (inside the 0.1% budget) -> no alerts.
+  - interval: 1m
+    input_series:
+      - series: 'healthqueue_http_requests_total{route="/v1/appointments",method="POST",status="201"}'
+        values: '0+1999x120'
+      - series: 'healthqueue_http_requests_total{route="/v1/appointments",method="POST",status="500"}'
+        values: '0+1x120'
+      - series: 'up{job="healthqueue-api"}'
+        values: '1x120'
+    alert_rule_test:
+      - eval_time: 110m
+        alertname: HealthQueueAvailabilityFastBurn
+        exp_alerts: []
+      - eval_time: 110m
+        alertname: HealthQueueApiDown
+        exp_alerts: []
+
+  # 2. Incident: 5% of requests fail (50x the budget) -> fast-burn page fires.
+  - interval: 1m
+    input_series:
+      - series: 'healthqueue_http_requests_total{route="/v1/appointments",method="POST",status="201"}'
+        values: '0+950x120'
+      - series: 'healthqueue_http_requests_total{route="/v1/appointments",method="POST",status="500"}'
+        values: '0+50x120'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: HealthQueueAvailabilityFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              slo: availability
+            exp_annotations:
+              summary: "HealthQueue API is burning its availability error budget 14x too fast"
+              description: "5xx ratio 5% over 1h. At this rate the 30-day budget is gone in ~2 days."
+              runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md"
+
+  # 3. Brief blip: errors only in the last 3 minutes -> the 1h window keeps it quiet.
+  - interval: 1m
+    input_series:
+      - series: 'healthqueue_http_requests_total{route="/v1/appointments",method="GET",status="200"}'
+        values: '0+1000x120'
+      - series: 'healthqueue_http_requests_total{route="/v1/appointments",method="GET",status="500"}'
+        values: '0x117 0+300x3'
+    alert_rule_test:
+      - eval_time: 120m
+        alertname: HealthQueueAvailabilityFastBurn
+        exp_alerts: []
+
+  # 4. Scrape target down for 5 minutes -> HealthQueueApiDown pages.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="healthqueue-api"}'
+        values: '1x10 0x10'
+    alert_rule_test:
+      - eval_time: 18m
+        alertname: HealthQueueApiDown
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              slo: availability
+              job: healthqueue-api
+            exp_annotations:
+              summary: "Prometheus cannot scrape the HealthQueue API"
+              runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md"
+
+  # 5. Bookings failing: 10% of valid submissions error -> submissions page.
+  - interval: 1m
+    input_series:
+      - series: 'healthqueue_appointment_submissions_total{outcome="created"}'
+        values: '0+90x120'
+      - series: 'healthqueue_appointment_submissions_total{outcome="error"}'
+        values: '0+10x120'
+      - series: 'healthqueue_appointment_submissions_total{outcome="rejected_validation"}'
+        values: '0+500x120'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: HealthQueueSubmissionFailuresFastBurn
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              slo: submissions
+            exp_annotations:
+              summary: "Patients cannot book: >7% of valid appointment submissions are failing"
+              runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md#bookings-failing"

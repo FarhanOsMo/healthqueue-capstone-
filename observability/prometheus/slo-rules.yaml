@@ -1,0 +1,164 @@
+# HealthQueue SLO recording rules + multi-window, multi-burn-rate alerts.
+#
+# Method: Google SRE Workbook, "Alerting on SLOs" (multiwindow, multi-burn-rate).
+# Burn rate = how fast the error budget is being spent. 1x = exactly the whole
+# 30-day budget in 30 days. 14.4x for 1 hour = 2% of the monthly budget gone.
+#
+# SLOs (30-day rolling window):
+#   availability  99.9%  -> error budget 0.1%  of eligible /v1 requests
+#   latency       99.0%  -> 1% of eligible /v1 requests may take >= 300 ms
+#   submissions   99.5%  -> 0.5% of valid booking attempts may fail server-side
+#
+# Validated with:  promtool check rules  +  promtool test rules (tests/prometheus/)
+groups:
+  - name: healthqueue-sli-recording
+    interval: 30s
+    rules:
+      # ---- Availability: share of eligible requests answered with 5xx ----
+      - record: healthqueue:api_error_ratio:rate5m
+        expr: |
+          sum(rate(healthqueue_http_requests_total{route=~"/v1/.*",status=~"5.."}[5m]))
+          / sum(rate(healthqueue_http_requests_total{route=~"/v1/.*"}[5m]))
+      - record: healthqueue:api_error_ratio:rate30m
+        expr: |
+          sum(rate(healthqueue_http_requests_total{route=~"/v1/.*",status=~"5.."}[30m]))
+          / sum(rate(healthqueue_http_requests_total{route=~"/v1/.*"}[30m]))
+      - record: healthqueue:api_error_ratio:rate1h
+        expr: |
+          sum(rate(healthqueue_http_requests_total{route=~"/v1/.*",status=~"5.."}[1h]))
+          / sum(rate(healthqueue_http_requests_total{route=~"/v1/.*"}[1h]))
+      - record: healthqueue:api_error_ratio:rate6h
+        expr: |
+          sum(rate(healthqueue_http_requests_total{route=~"/v1/.*",status=~"5.."}[6h]))
+          / sum(rate(healthqueue_http_requests_total{route=~"/v1/.*"}[6h]))
+      - record: healthqueue:api_error_ratio:rate3d
+        expr: |
+          sum(rate(healthqueue_http_requests_total{route=~"/v1/.*",status=~"5.."}[3d]))
+          / sum(rate(healthqueue_http_requests_total{route=~"/v1/.*"}[3d]))
+
+      # ---- Latency: share of eligible requests NOT faster than 300 ms ----
+      - record: healthqueue:api_slow_ratio:rate5m
+        expr: |
+          1 - (
+            sum(rate(healthqueue_http_request_duration_seconds_bucket{route=~"/v1/.*",le="0.3"}[5m]))
+            / sum(rate(healthqueue_http_request_duration_seconds_count{route=~"/v1/.*"}[5m]))
+          )
+      - record: healthqueue:api_slow_ratio:rate1h
+        expr: |
+          1 - (
+            sum(rate(healthqueue_http_request_duration_seconds_bucket{route=~"/v1/.*",le="0.3"}[1h]))
+            / sum(rate(healthqueue_http_request_duration_seconds_count{route=~"/v1/.*"}[1h]))
+          )
+      - record: healthqueue:api_slow_ratio:rate6h
+        expr: |
+          1 - (
+            sum(rate(healthqueue_http_request_duration_seconds_bucket{route=~"/v1/.*",le="0.3"}[6h]))
+            / sum(rate(healthqueue_http_request_duration_seconds_count{route=~"/v1/.*"}[6h]))
+          )
+      - record: healthqueue:api_slow_ratio:rate30m
+        expr: |
+          1 - (
+            sum(rate(healthqueue_http_request_duration_seconds_bucket{route=~"/v1/.*",le="0.3"}[30m]))
+            / sum(rate(healthqueue_http_request_duration_seconds_count{route=~"/v1/.*"}[30m]))
+          )
+
+      # ---- Submissions: valid booking attempts that failed server-side ----
+      # Eligible = created + conflict (correct "slot taken" answer) + error.
+      # Validation rejections (422) are the client's mistake, so not eligible.
+      - record: healthqueue:submission_failure_ratio:rate5m
+        expr: |
+          sum(rate(healthqueue_appointment_submissions_total{outcome="error"}[5m]))
+          / sum(rate(healthqueue_appointment_submissions_total{outcome=~"created|conflict|error"}[5m]))
+      - record: healthqueue:submission_failure_ratio:rate1h
+        expr: |
+          sum(rate(healthqueue_appointment_submissions_total{outcome="error"}[1h]))
+          / sum(rate(healthqueue_appointment_submissions_total{outcome=~"created|conflict|error"}[1h]))
+
+  - name: healthqueue-slo-alerts
+    rules:
+      # Page: 2% of the 30-day budget burned in 1 hour (14.4x), confirmed by 5m window.
+      - alert: HealthQueueAvailabilityFastBurn
+        expr: |
+          healthqueue:api_error_ratio:rate1h > (14.4 * 0.001)
+          and healthqueue:api_error_ratio:rate5m > (14.4 * 0.001)
+        for: 2m
+        labels:
+          severity: page
+          slo: availability
+        annotations:
+          summary: "HealthQueue API is burning its availability error budget 14x too fast"
+          description: "5xx ratio {{ $value | humanizePercentage }} over 1h. At this rate the 30-day budget is gone in ~2 days."
+          runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md"
+
+      # Page: 5% of budget in 6 hours (6x), confirmed by 30m window.
+      - alert: HealthQueueAvailabilitySlowBurn
+        expr: |
+          healthqueue:api_error_ratio:rate6h > (6 * 0.001)
+          and healthqueue:api_error_ratio:rate30m > (6 * 0.001)
+        for: 15m
+        labels:
+          severity: page
+          slo: availability
+        annotations:
+          summary: "HealthQueue API availability budget burning 6x too fast"
+          runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md"
+
+      # Ticket: 10% of budget in 3 days (1x sustained) - fix during business hours.
+      - alert: HealthQueueAvailabilityBudgetDrain
+        expr: |
+          healthqueue:api_error_ratio:rate3d > 0.001
+          and healthqueue:api_error_ratio:rate6h > 0.001
+        for: 1h
+        labels:
+          severity: ticket
+          slo: availability
+        annotations:
+          summary: "HealthQueue API is consuming its error budget faster than planned"
+          runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md"
+
+      - alert: HealthQueueLatencyFastBurn
+        expr: |
+          healthqueue:api_slow_ratio:rate1h > (14.4 * 0.01)
+          and healthqueue:api_slow_ratio:rate5m > (14.4 * 0.01)
+        for: 2m
+        labels:
+          severity: page
+          slo: latency
+        annotations:
+          summary: "More than 14% of HealthQueue requests are slower than 300 ms"
+          runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md#latency"
+
+      - alert: HealthQueueLatencySlowBurn
+        expr: |
+          healthqueue:api_slow_ratio:rate6h > (6 * 0.01)
+          and healthqueue:api_slow_ratio:rate30m > (6 * 0.01)
+        for: 15m
+        labels:
+          severity: ticket
+          slo: latency
+        annotations:
+          summary: "HealthQueue latency budget burning 6x too fast"
+          runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md#latency"
+
+      - alert: HealthQueueSubmissionFailuresFastBurn
+        expr: |
+          healthqueue:submission_failure_ratio:rate1h > (14.4 * 0.005)
+          and healthqueue:submission_failure_ratio:rate5m > (14.4 * 0.005)
+        for: 2m
+        labels:
+          severity: page
+          slo: submissions
+        annotations:
+          summary: "Patients cannot book: >7% of valid appointment submissions are failing"
+          runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md#bookings-failing"
+
+      # Symptom of total outage that ratio rules cannot see (no traffic recorded).
+      - alert: HealthQueueApiDown
+        expr: up{job="healthqueue-api"} == 0
+        for: 2m
+        labels:
+          severity: page
+          slo: availability
+        annotations:
+          summary: "Prometheus cannot scrape the HealthQueue API"
+          runbook_url: "https://github.com/FarhanOsMo/healthqueue-capstone-/blob/main/docs/runbooks/incident-api-availability.md"

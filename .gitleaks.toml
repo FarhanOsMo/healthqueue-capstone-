@@ -1,0 +1,7 @@
+# gitleaks configuration: default rules + one narrowly scoped allow-list entry.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public OpenPGP fingerprint of the CPython release manager, recorded in the python:3.13-slim image history (ENV GPG_KEY=...) and therefore in Trivy/Syft reports. A key fingerprint is public, not a secret."
+regexes = ['''^7169605F62C751356D054A26A821E680E5FA6305$''']  # matched against the extracted value

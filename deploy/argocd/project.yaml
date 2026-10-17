@@ -1,0 +1,39 @@
+# AppProject = guard rails for what HealthQueue applications may deploy, and where.
+# Even if someone edits an Application, Argo CD refuses anything outside these rules.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: healthqueue
+  namespace: argocd
+spec:
+  description: HealthQueue appointment API
+  sourceRepos:
+    # Local in-cluster Git server used for the zero-cost demo
+    - http://gitea-http.gitops-local.svc.cluster.local:3000/hq-admin/healthqueue-capstone.git
+    # The real GitHub repository
+    - https://github.com/FarhanOsMo/healthqueue-capstone-.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: healthqueue
+  # The only cluster-scoped object the app may own is its own Namespace.
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace
+  # Secrets are deliberately NOT whitelisted: they never come from Git.
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler

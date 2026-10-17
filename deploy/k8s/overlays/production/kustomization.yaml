@@ -1,0 +1,54 @@
+# Production overlay (reference design - NOT deployed by this project; no paid cluster).
+# Differences from local:
+#   * image comes from GHCR, pinned to the digest the release workflow signed
+#   * 3 replicas + autoscaling
+#   * in-cluster PostgreSQL removed -> managed PostgreSQL (endpoint in ConfigMap)
+#   * the healthqueue-db Secret is synced from a cloud secret manager by
+#     External Secrets Operator (not stored in Git)
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+  - hpa.yaml
+labels:
+  - pairs:
+      app.kubernetes.io/instance: healthqueue-production
+images:
+  - name: healthqueue-api
+    newName: ghcr.io/farhanosmo/healthqueue-api
+    # Updated by a pull request opened by .github/workflows/release.yml.
+    # Placeholder until the first signed release is published.
+    digest: sha256:0000000000000000000000000000000000000000000000000000000000000000
+replicas:
+  - name: healthqueue-api
+    count: 3
+patches:
+  - target:
+      kind: ConfigMap
+      name: healthqueue-api-config
+    patch: |-
+      - op: replace
+        path: /data/APP_ENV
+        value: production
+      - op: replace
+        path: /data/DB_HOST
+        value: healthqueue-prod.cluster-example.us-east-1.rds.amazonaws.com
+  # Remove the demo database; production uses a managed service.
+  - target:
+      kind: StatefulSet
+      name: healthqueue-postgres
+    patch: |-
+      $patch: delete
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
+        name: healthqueue-postgres
+  - target:
+      kind: Service
+      name: healthqueue-postgres
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: healthqueue-postgres

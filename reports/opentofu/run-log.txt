@@ -1,0 +1,55 @@
+
+=== 1/6 Static validation (fmt + validate, no backend)
+modules/healthqueue-platform         Success! The configuration is valid.
+environments/aws-production          Success! The configuration is valid.
+environments/localstack              Success! The configuration is valid.
+bootstrap                            Success! The configuration is valid.
+
+=== 2/6 Start LocalStack (localstack/localstack:3.8) on 127.0.0.1:4566
+{"services": {"acm": "disabled", "apigateway": "disabled", "cloudformation": "disabled", "cloudwatch": "disabled", "config": "disabled", "dynamodb": "disabled", "dynamodbstreams": "disabled", "ec2": "disabled", "es": "disabled", "events": "disabled", "firehose": "disabled", "iam": "running", "kinesis": "disabled", "kms": "available", "lambda": "disabled", "logs": "available", "opensearch": "disabled", "redshift": "disabled", "resource-groups": "disabled", "resourcegroupstaggingapi": "disabled", "route53": "disabled", "route53resolver": "disabled", "s3": "running", "s3control": "disabled", "scheduler": "disabled", "secretsmanager": "disabled", "ses": "disabled", "sns": "disabled", "sqs": "disabled", "ssm": "disabled", "stepfunctions": "disabled", "sts": "running", "support": "disabled", "swf": "disabled", "transcribe": "disabled"}, "edition": "community", "version": "3.8.1"}
+
+=== 3/6 Create versioned state bucket (awslocal, not tofu apply)
+{
+    "Status": "Enabled"
+}
+
+=== 4/6 tofu init with the S3 remote backend (LocalStack)
+Initializing the backend...
+Successfully configured the backend "s3"! OpenTofu will automatically
+use this backend unless the backend configuration changes.
+If you ever set or change modules or backend configuration for OpenTofu,
+
+=== 5/6 Lock enforcement test
+Error: Error acquiring the state lock
+-> plan correctly BLOCKED while another holder had the lock
+OpenTofu state has been successfully unlocked!
+
+The state has been unlocked, and OpenTofu commands should now be able to
+obtain a new lock on the remote state.
+
+=== 6/6 tofu plan (acquires + releases the S3 lock; creates nothing)
+Plan: 13 to add, 0 to change, 0 to destroy.
+# module.platform.data.aws_iam_policy_document.evidence_bucket will be read during apply
+# (config refers to values not yet known)
+# module.platform.data.aws_iam_policy_document.evidence_upload will be read during apply
+# (config refers to values not yet known)
+# module.platform.data.aws_iam_policy_document.github_trust will be read during apply
+# (config refers to values not yet known)
+# module.platform.aws_cloudwatch_log_group.api will be created
+# module.platform.aws_iam_openid_connect_provider.github[0] will be created
+# module.platform.aws_iam_role.github_evidence_uploader will be created
+# module.platform.aws_iam_role_policy.evidence_upload will be created
+# module.platform.aws_kms_alias.platform will be created
+# module.platform.aws_kms_key.platform will be created
+# module.platform.aws_s3_bucket.evidence will be created
+# module.platform.aws_s3_bucket_lifecycle_configuration.evidence will be created
+# module.platform.aws_s3_bucket_ownership_controls.evidence will be created
+# module.platform.aws_s3_bucket_policy.evidence will be created
+# module.platform.aws_s3_bucket_public_access_block.evidence will be created
+# module.platform.aws_s3_bucket_server_side_encryption_configuration.evidence will be created
+# module.platform.aws_s3_bucket_versioning.evidence will be created
+lock objects left after plan (should be none):
+
+OpenTofu LocalStack checks passed. Evidence in reports/opentofu/
+Reminder: no 'tofu apply' was run. LocalStack container 'hq-localstack' is still running;
+stop it with: docker rm -f hq-localstack

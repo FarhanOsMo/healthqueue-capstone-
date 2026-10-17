@@ -1,0 +1,234 @@
+
+=== 1/8 Local registry (kind-registry, host port 5001)
+registry ready
+
+=== 2/8 Build image healthqueue-api:0.1.1
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 2.21kB 0.0s done
+#1 DONE 0.1s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 ...
+
+#3 [auth] docker/dockerfile:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 1.3s
+
+#4 docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#4 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.1s done
+#4 CACHED
+
+#5 [internal] load metadata for docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+#5 ...
+
+#6 [auth] library/python:pull token for registry-1.docker.io
+#6 DONE 0.0s
+
+#5 [internal] load metadata for docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+#5 DONE 0.5s
+
+#7 [internal] load .dockerignore
+#7 transferring context: 239B 0.0s done
+#7 DONE 0.0s
+
+#8 [internal] load build context
+#8 transferring context: 264B done
+#8 DONE 0.0s
+
+#9 [builder 1/5] FROM docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f
+#9 resolve docker.io/library/python:3.13-slim@sha256:70729b46c69b4f1e97c4822c1af3df53a1476cf5ddc6c087c0c10bc3a5678c2f 0.1s done
+#9 DONE 0.1s
+
+#10 [builder 3/5] WORKDIR /build
+#10 CACHED
+
+#11 [builder 4/5] COPY requirements.txt .
+#11 CACHED
+
+#12 [builder 5/5] RUN pip install --require-virtualenv -r requirements.txt  && pip uninstall --yes pip
+#12 CACHED
+
+#13 [runtime 2/5] RUN rm -rf /usr/local/lib/python3.13/site-packages/pip /usr/local/lib/python3.13/site-packages/pip-*.dist-info            /usr/local/lib/python3.13/ensurepip /usr/local/bin/pip /usr/local/bin/pip3*  && groupadd --system --gid 10001 app  && useradd --system --uid 10001 --gid app --no-create-home --shell /usr/sbin/nologin app  && mkdir /data && chown app:app /data
+#13 CACHED
+
+#14 [runtime 3/5] WORKDIR /srv
+#14 CACHED
+
+#15 [builder 2/5] RUN python -m venv /opt/venv
+#15 CACHED
+
+#16 [runtime 4/5] COPY --from=builder /opt/venv /opt/venv
+#16 CACHED
+
+#17 [runtime 5/5] COPY app ./app
+#17 CACHED
+
+#18 exporting to image
+#18 exporting layers 0.0s done
+#18 exporting manifest sha256:6a98800b865676463e984b70205c1dc073400c1fb1d1c5d8702e6da41dba86cc done
+#18 exporting config sha256:12b6a51c787571446955986ee0dda055dc72ddddcfb67b431ea6f73b043490b7 done
+#18 exporting attestation manifest sha256:2488cf2bb94295eb010af4fb18cc395b00fd4479a64187c461b74da8c09da1d4
+#18 exporting attestation manifest sha256:2488cf2bb94295eb010af4fb18cc395b00fd4479a64187c461b74da8c09da1d4 0.1s done
+#18 exporting manifest list sha256:583efbe90ec196a084ac129ded19e2cae9196ec16cc458d32ff156d3a7d71b9c 0.1s done
+#18 naming to docker.io/library/healthqueue-api:0.1.1 0.0s done
+#18 unpacking to docker.io/library/healthqueue-api:0.1.1 0.1s done
+#18 DONE 0.4s
+
+=== 3/8 Push to local registry and resolve the immutable digest
+kind-registry:5000/healthqueue-api@sha256:583efbe90ec196a084ac129ded19e2cae9196ec16cc458d32ff156d3a7d71b9c
+
+=== 4/8 Trivy vulnerability scan (gate: fail on fixable HIGH/CRITICAL)
+
+Report Summary
+
+┌──────────────────────────────────────────────────────────────────────────────────┬────────────┬─────────────────┐
+│                                      Target                                      │    Type    │ Vulnerabilities │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ kind-registry:5000/healthqueue-api@sha256:583efbe90ec196a084ac129ded19e2cae9196- │   debian   │        0        │
+│ ec16cc458d32ff156d3a7d71b9c (debian 13.7)                                        │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/annotated_doc-0.0.5.dist-info/METADATA     │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/annotated_types-0.8.0.dist-info/METADATA   │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/anyio-4.15.1.dist-info/METADATA            │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/asgiref-3.12.1.dist-info/METADATA          │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/certifi-2026.7.22.dist-info/METADATA       │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/charset_normalizer-3.5.2.dist-info/METADA- │ python-pkg │        0        │
+│ TA                                                                               │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/click-8.5.0.dist-info/METADATA             │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/fastapi-0.143.3.dist-info/METADATA         │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/googleapis_common_protos-1.75.5.dist-info- │ python-pkg │        0        │
+│ /METADATA                                                                        │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/h11-0.16.0.dist-info/METADATA              │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/idna-3.20.dist-info/METADATA               │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_api-1.45.1.dist-info/METADA- │ python-pkg │        0        │
+│ TA                                                                               │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_exporter_http_transport-0.6- │ python-pkg │        0        │
+│ 6b1.dist-info/METADATA                                                           │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_exporter_otlp_common-0.66b1- │ python-pkg │        0        │
+│ .dist-info/METADATA                                                              │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_exporter_otlp_proto_common-- │ python-pkg │        0        │
+│ 1.45.1.dist-info/METADATA                                                        │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_exporter_otlp_proto_http-1.- │ python-pkg │        0        │
+│ 45.1.dist-info/METADATA                                                          │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_instrumentation-0.66b1.dist- │ python-pkg │        0        │
+│ -info/METADATA                                                                   │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_instrumentation_asgi-0.66b1- │ python-pkg │        0        │
+│ .dist-info/METADATA                                                              │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_instrumentation_fastapi-0.6- │ python-pkg │        0        │
+│ 6b1.dist-info/METADATA                                                           │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_proto-1.45.1.dist-info/META- │ python-pkg │        0        │
+│ DATA                                                                             │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_sdk-1.45.1.dist-info/METADA- │ python-pkg │        0        │
+│ TA                                                                               │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_semantic_conventions-0.66b1- │ python-pkg │        0        │
+│ .dist-info/METADATA                                                              │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/opentelemetry_util_http-0.66b1.dist-info/- │ python-pkg │        0        │
+│ METADATA                                                                         │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/packaging-26.3.dist-info/METADATA          │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/prometheus_client-0.26.0.dist-info/METADA- │ python-pkg │        0        │
+│ TA                                                                               │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/protobuf-7.36.2.dist-info/METADATA         │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/psycopg-3.3.6.dist-info/METADATA           │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/psycopg_binary-3.3.6.dist-info/METADATA    │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/psycopg_pool-3.3.3.dist-info/METADATA      │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/pydantic-2.14.1.dist-info/METADATA         │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/pydantic_core-2.50.1.dist-info/METADATA    │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/requests-2.34.2.dist-info/METADATA         │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/starlette-1.8.0.dist-info/METADATA         │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/typing_extensions-4.16.0.dist-info/METADA- │ python-pkg │        0        │
+│ TA                                                                               │            │                 │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/typing_inspection-0.4.4.dist-info/METADATA │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/urllib3-2.8.0.dist-info/METADATA           │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/uvicorn-0.54.0.dist-info/METADATA          │ python-pkg │        0        │
+├──────────────────────────────────────────────────────────────────────────────────┼────────────┼─────────────────┤
+│ opt/venv/lib/python3.13/site-packages/wrapt-2.5.1.dist-info/METADATA             │ python-pkg │        0        │
+└──────────────────────────────────────────────────────────────────────────────────┴────────────┴─────────────────┘
+Legend:
+- '-': Not scanned
+- '0': Clean (no security findings detected)
+
+Trivy gate passed (no fixable HIGH/CRITICAL findings)
+
+=== 5/8 Syft SBOM (SPDX JSON + CycloneDX JSON)
+SBOM packages: 2969 SPDX elements
+
+=== 6/8 Cosign: local test key, sign by digest, attest SBOM + provenance
+Flag --tlog-upload has been deprecated, prefer using a --signing-config file with no transparency log services
+Signing artifact...
+Pushing signature to: kind-registry:5000/healthqueue-api
+Flag --tlog-upload has been deprecated, prefer using a --signing-config file with no transparency log services
+Using payload from: /work/reports/supply-chain/sbom.spdx.json
+Signing artifact...
+Flag --tlog-upload has been deprecated, prefer using a --signing-config file with no transparency log services
+Using payload from: /work/reports/supply-chain/provenance.local.json
+Signing artifact...
+
+=== 7/8 Verify signature and attestations (fails closed if anything is wrong)
+WARNING: Skipping tlog verification is an insecure practice that lacks transparency and auditability verification for the signature.
+
+Verification for kind-registry:5000/healthqueue-api@sha256:583efbe90ec196a084ac129ded19e2cae9196ec16cc458d32ff156d3a7d71b9c --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The signatures were verified against the specified public key
+WARNING: Skipping tlog verification is an insecure practice that lacks transparency and auditability verification for the attestation.
+
+Verification for kind-registry:5000/healthqueue-api@sha256:583efbe90ec196a084ac129ded19e2cae9196ec16cc458d32ff156d3a7d71b9c --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The signatures were verified against the specified public key
+WARNING: Skipping tlog verification is an insecure practice that lacks transparency and auditability verification for the attestation.
+
+Verification for kind-registry:5000/healthqueue-api@sha256:583efbe90ec196a084ac129ded19e2cae9196ec16cc458d32ff156d3a7d71b9c --
+The following checks were performed on each of these signatures:
+  - The cosign claims were validated
+  - Existence of the claims in the transparency log was verified offline
+  - The signatures were verified against the specified public key
+signature + SBOM attestation + provenance attestation verified
+
+=== 8/8 Negative test: a tampered (rebuilt, unsigned) image must FAIL verification
+tampered image sha256:0f00ff9dcfdcbd768015f0d3b4199460a6cef01280fc30f7c42b44155b9c070c correctly rejected:
+error during command execution: no signatures found
+
+Done. Evidence in reports/supply-chain/

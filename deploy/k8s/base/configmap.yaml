@@ -1,0 +1,16 @@
+# Non-secret settings only. The database password lives in the Secret
+# "healthqueue-db", which is NOT stored in Git (see docs/runbooks/kubernetes-gitops.md).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: healthqueue-api-config
+  labels:
+    app.kubernetes.io/name: healthqueue-api
+data:
+  APP_ENV: "local"
+  LOG_LEVEL: "INFO"
+  MAX_DAYS_AHEAD: "180"
+  SERVICE_NAME: "healthqueue-api"
+  DB_HOST: "healthqueue-postgres"
+  DB_NAME: "healthqueue"
+  DB_USER: "healthqueue"

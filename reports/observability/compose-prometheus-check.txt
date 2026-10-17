@@ -1,0 +1,13 @@
+# docker compose (api + postgres + prometheus) - 2026-10-17T21:42:26Z
+api Up About a minute (healthy)
+postgres Up About a minute (healthy)
+prometheus Up About a minute
+--- prometheus targets
+healthqueue-api up http://api:8080/metrics
+--- rule groups
+healthqueue-sli-recording 11 rules
+healthqueue-slo-alerts 7 rules
+--- query: sum by (outcome) (healthqueue_appointment_submissions_total)
+created 30
+--- api container hardening
+ReadonlyRootfs=true CapDrop=[ALL] User=10001:10001 SecurityOpt=[no-new-privileges:true]

@@ -1,0 +1,4 @@
+modules/healthqueue-platform: Success! The configuration is valid.
+environments/aws-production: Success! The configuration is valid.
+environments/localstack: Success! The configuration is valid.
+bootstrap: Success! The configuration is valid.

@@ -1,0 +1,1 @@
+Summary: 23 resources found in 2 files - Valid: 23, Invalid: 0, Errors: 0, Skipped: 0

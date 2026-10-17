@@ -1,0 +1,21 @@
+# Dedicated, disposable kind cluster for HealthQueue.
+# Create:  kind create cluster --config deploy/kind/cluster.yaml --kubeconfig .kube/healthqueue.kubeconfig
+# Delete:  kind delete cluster --name healthqueue
+# Using a separate kubeconfig file means your default kubectl context is never changed.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: healthqueue
+containerdConfigPatches:
+  # Lets nodes read per-registry config from /etc/containerd/certs.d, which
+  # scripts/kind_up.sh uses to trust the local registry (kind-registry:5000).
+  - |-
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      config_path = "/etc/containerd/certs.d"
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      # HealthQueue API NodePort -> http://127.0.0.1:30080 on the host
+      - containerPort: 30080
+        hostPort: 30080
+        listenAddress: "127.0.0.1"
+        protocol: TCP

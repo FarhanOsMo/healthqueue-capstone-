@@ -1,0 +1,6 @@
+# Changes to these paths require review from the owner (enforced when branch
+# protection "Require review from Code Owners" is enabled).
+*                         @FarhanOsMo
+/.github/                 @FarhanOsMo
+/infra/                   @FarhanOsMo
+/deploy/                  @FarhanOsMo

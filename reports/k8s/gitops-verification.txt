@@ -1,0 +1,66 @@
+== Cluster: kind-healthqueue   Argo CD app: healthqueue-local
+NAME                SYNC STATUS   HEALTH STATUS
+healthqueue-local   Synced        Healthy
+
+== 1. API through NodePort (http://127.0.0.1:30080)
+PASS  /healthz
+PASS  /readyz (database reachable)
+PASS  POST /v1/appointments -> 201
+PASS  GET /v1/appointments/{id} -> 200 on 4 reads (shared PostgreSQL across replicas)
+PASS  double booking -> 409
+PASS  invalid payload -> 422
+
+== 2. Image provenance in the running pods
+kind-registry:5000/healthqueue-api@sha256:583efbe90ec196a084ac129ded19e2cae9196ec16cc458d32ff156d3a7d71b9c
+PASS  pods run the exact signed digest from reports/supply-chain/image-ref.txt
+
+== 3. Self-heal (manual drift is reverted)
+manually scaled to 5 (drift) at 22:30:31
+PASS  Argo CD restored replicas to 2 (selfHeal) at 22:30:33
+
+== 4. GitOps change via Git commit (replicas 2 -> 3)
+PASS  commit e02d3a0 synced by Argo CD -> 3 replicas
+
+== 5. Rollback with git revert
+PASS  revert 7af0137 synced -> back to 2 replicas
+7af0137 Revert "Scale healthqueue-api to 3 replicas (GitOps verification)"
+e02d3a0 Scale healthqueue-api to 3 replicas (GitOps verification)
+30594a4 deploy(local): final verified 0.1.1 build + hardened Gitea + docs
+
+== 6. NetworkPolicy
+PASS  API pod -> postgres:5432 allowed
+PASS  control: pod in 'default' -> healthqueue-api:80 allowed
+PASS  pod in namespace 'default' -> postgres:5432 blocked
+
+== 7. Pod Security Admission (restricted)
+violates PodSecurity "restricted:latest"
+PASS  privileged pod rejected by the namespace policy
+
+== Final state
+NAME                SYNC STATUS   HEALTH STATUS
+healthqueue-local   Synced        Healthy
+NAME                              READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/healthqueue-api   2/2     2            2           60m
+
+NAME                                    READY   AGE
+statefulset.apps/healthqueue-postgres   1/1     60m
+
+NAME                                   READY   STATUS    RESTARTS   AGE
+pod/healthqueue-api-8497995ff5-5bnbg   1/1     Running   0          74s
+pod/healthqueue-api-8497995ff5-8d96v   1/1     Running   0          62s
+pod/healthqueue-postgres-0             1/1     Running   0          60m
+
+NAME                           TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)        AGE
+service/healthqueue-api        NodePort    10.96.67.127   <none>        80:30080/TCP   60m
+service/healthqueue-postgres   ClusterIP   None           <none>        5432/TCP       60m
+
+NAME                                                      POD-SELECTOR                                  AGE
+networkpolicy.networking.k8s.io/api-allow-http-in         app.kubernetes.io/name=healthqueue-api        60m
+networkpolicy.networking.k8s.io/api-egress-db-and-dns     app.kubernetes.io/name=healthqueue-api        60m
+networkpolicy.networking.k8s.io/default-deny-all          <none>                                        60m
+networkpolicy.networking.k8s.io/postgres-allow-from-api   app.kubernetes.io/name=healthqueue-postgres   60m
+
+NAME                                         MIN AVAILABLE   MAX UNAVAILABLE   ALLOWED DISRUPTIONS   AGE
+poddisruptionbudget.policy/healthqueue-api   1               N/A               1                     60m
+
+ALL GITOPS CHECKS PASSED (base revision 30594a4)

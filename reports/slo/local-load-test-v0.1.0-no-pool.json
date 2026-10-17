@@ -1,0 +1,43 @@
+{
+  "label": "OBSERVED - local load test on a laptop kind cluster (not production, not a 30-day window)",
+  "generated_utc": "2026-10-17T21:44:44Z",
+  "target": "http://127.0.0.1:30080",
+  "duration_seconds": 89.7,
+  "workers": 8,
+  "seed": 7,
+  "client_side": {
+    "requests": 3000,
+    "status_counts": {
+      "200": 1693,
+      "201": 707,
+      "404": 146,
+      "409": 160,
+      "422": 294
+    },
+    "availability_good": 3000,
+    "latency_fast": 2273,
+    "submissions_good": 867,
+    "submissions_eligible": 867,
+    "p50_ms": 210.4,
+    "p95_ms": 402.6,
+    "p99_ms": 501.9
+  },
+  "server_side_prometheus_delta": {
+    "eligible_requests": 3000.0,
+    "errors_5xx": 0,
+    "fast_requests_le_0_3s": 2563.0,
+    "timed_requests": 3000.0,
+    "submissions_created": 707.0,
+    "submissions_conflict": 160.0,
+    "submissions_error": 0,
+    "submissions_rejected_validation": 294.0
+  },
+  "sli": {
+    "availability_client": 1.0,
+    "availability_server": 1.0,
+    "latency_client_lt_300ms": 0.757667,
+    "latency_server_le_300ms": 0.854333,
+    "submissions_client": 1.0,
+    "submissions_server": 1.0
+  }
+}

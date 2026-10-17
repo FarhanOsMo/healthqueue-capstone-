@@ -1,0 +1,30 @@
+# Reference only - there is no production cluster in this zero-cost project.
+# Production differs from local in two GitOps-relevant ways:
+#   1. automated sync WITHOUT auto-prune: deletions need a human click
+#   2. replicas are owned by the HPA, so Argo CD ignores replica drift
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: healthqueue-production
+  namespace: argocd
+spec:
+  project: healthqueue
+  source:
+    repoURL: https://github.com/FarhanOsMo/healthqueue-capstone-.git
+    targetRevision: main
+    path: deploy/k8s/overlays/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: healthqueue
+  ignoreDifferences:
+    - group: apps
+      kind: Deployment
+      name: healthqueue-api
+      jsonPointers:
+        - /spec/replicas
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - RespectIgnoreDifferences=true

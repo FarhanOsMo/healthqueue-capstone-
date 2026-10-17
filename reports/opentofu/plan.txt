@@ -1,0 +1,400 @@
+module.platform.data.aws_caller_identity.current: Reading...
+module.platform.data.aws_partition.current: Reading...
+module.platform.data.aws_partition.current: Read complete after 0s [id=aws]
+module.platform.data.aws_caller_identity.current: Read complete after 0s [id=000000000000]
+module.platform.data.aws_iam_policy_document.kms: Reading...
+module.platform.data.aws_iam_policy_document.kms: Read complete after 0s [id=1589729494]
+
+OpenTofu used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+ <= read (data resources)
+
+OpenTofu will perform the following actions:
+
+  # module.platform.data.aws_iam_policy_document.evidence_bucket will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "evidence_bucket" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "s3:*",
+            ]
+          + effect    = "Deny"
+          + resources = [
+              + (known after apply),
+              + (known after apply),
+            ]
+          + sid       = "DenyInsecureTransport"
+
+          + condition {
+              + test     = "Bool"
+              + values   = [
+                  + "false",
+                ]
+              + variable = "aws:SecureTransport"
+            }
+
+          + principals {
+              + identifiers = [
+                  + "*",
+                ]
+              + type        = "*"
+            }
+        }
+    }
+
+  # module.platform.data.aws_iam_policy_document.evidence_upload will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "evidence_upload" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions   = [
+              + "s3:PutObject",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+          + sid       = "PutEvidenceOnly"
+        }
+      + statement {
+          + actions   = [
+              + "kms:Encrypt",
+              + "kms:GenerateDataKey",
+            ]
+          + resources = [
+              + (known after apply),
+            ]
+          + sid       = "UseProjectKeyForUploads"
+        }
+    }
+
+  # module.platform.data.aws_iam_policy_document.github_trust will be read during apply
+  # (config refers to values not yet known)
+ <= data "aws_iam_policy_document" "github_trust" {
+      + id            = (known after apply)
+      + json          = (known after apply)
+      + minified_json = (known after apply)
+
+      + statement {
+          + actions = [
+              + "sts:AssumeRoleWithWebIdentity",
+            ]
+
+          + condition {
+              + test     = "StringEquals"
+              + values   = [
+                  + "sts.amazonaws.com",
+                ]
+              + variable = "token.actions.githubusercontent.com:aud"
+            }
+          + condition {
+              + test     = "StringLike"
+              + values   = [
+                  + "repo:FarhanOsMo/healthqueue-capstone-:ref:refs/heads/main",
+                  + "repo:FarhanOsMo/healthqueue-capstone-:ref:refs/tags/v*",
+                ]
+              + variable = "token.actions.githubusercontent.com:sub"
+            }
+
+          + principals {
+              + identifiers = [
+                  + (known after apply),
+                ]
+              + type        = "Federated"
+            }
+        }
+    }
+
+  # module.platform.aws_cloudwatch_log_group.api will be created
+  + resource "aws_cloudwatch_log_group" "api" {
+      + arn                         = (known after apply)
+      + deletion_protection_enabled = (known after apply)
+      + id                          = (known after apply)
+      + kms_key_id                  = (known after apply)
+      + log_group_class             = (known after apply)
+      + name                        = "/healthqueue/local/api"
+      + name_prefix                 = (known after apply)
+      + region                      = "us-east-1"
+      + retention_in_days           = 7
+      + skip_destroy                = false
+      + tags_all                    = {
+          + "Environment" = "local"
+          + "ManagedBy"   = "opentofu"
+          + "Project"     = "healthqueue"
+          + "Target"      = "localstack"
+        }
+    }
+
+  # module.platform.aws_iam_openid_connect_provider.github[0] will be created
+  + resource "aws_iam_openid_connect_provider" "github" {
+      + arn             = (known after apply)
+      + client_id_list  = [
+          + "sts.amazonaws.com",
+        ]
+      + id              = (known after apply)
+      + tags_all        = {
+          + "Environment" = "local"
+          + "ManagedBy"   = "opentofu"
+          + "Project"     = "healthqueue"
+          + "Target"      = "localstack"
+        }
+      + thumbprint_list = (known after apply)
+      + url             = "https://token.actions.githubusercontent.com"
+    }
+
+  # module.platform.aws_iam_role.github_evidence_uploader will be created
+  + resource "aws_iam_role" "github_evidence_uploader" {
+      + arn                   = (known after apply)
+      + assume_role_policy    = (known after apply)
+      + create_date           = (known after apply)
+      + force_detach_policies = false
+      + id                    = (known after apply)
+      + managed_policy_arns   = (known after apply)
+      + max_session_duration  = 3600
+      + name                  = "healthqueue-local-gha-evidence-uploader"
+      + name_prefix           = (known after apply)
+      + path                  = "/"
+      + tags_all              = {
+          + "Environment" = "local"
+          + "ManagedBy"   = "opentofu"
+          + "Project"     = "healthqueue"
+          + "Target"      = "localstack"
+        }
+      + unique_id             = (known after apply)
+
+      + inline_policy (known after apply)
+    }
+
+  # module.platform.aws_iam_role_policy.evidence_upload will be created
+  + resource "aws_iam_role_policy" "evidence_upload" {
+      + id          = (known after apply)
+      + name        = "evidence-upload"
+      + name_prefix = (known after apply)
+      + policy      = (known after apply)
+      + role        = (known after apply)
+    }
+
+  # module.platform.aws_kms_alias.platform will be created
+  + resource "aws_kms_alias" "platform" {
+      + arn            = (known after apply)
+      + id             = (known after apply)
+      + name           = "alias/healthqueue-local"
+      + name_prefix    = (known after apply)
+      + region         = "us-east-1"
+      + target_key_arn = (known after apply)
+      + target_key_id  = (known after apply)
+    }
+
+  # module.platform.aws_kms_key.platform will be created
+  + resource "aws_kms_key" "platform" {
+      + arn                                = (known after apply)
+      + bypass_policy_lockout_safety_check = false
+      + customer_master_key_spec           = "SYMMETRIC_DEFAULT"
+      + deletion_window_in_days            = 30
+      + description                        = "healthqueue-local encryption key (evidence bucket + logs)"
+      + enable_key_rotation                = true
+      + id                                 = (known after apply)
+      + is_enabled                         = true
+      + key_id                             = (known after apply)
+      + key_usage                          = "ENCRYPT_DECRYPT"
+      + multi_region                       = (known after apply)
+      + policy                             = jsonencode(
+            {
+              + Statement = [
+                  + {
+                      + Action    = "kms:*"
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + AWS = "arn:aws:iam::000000000000:root"
+                        }
+                      + Resource  = "*"
+                      + Sid       = "AccountAdministration"
+                    },
+                  + {
+                      + Action    = [
+                          + "kms:ReEncrypt*",
+                          + "kms:GenerateDataKey*",
+                          + "kms:Encrypt*",
+                          + "kms:Describe*",
+                          + "kms:Decrypt*",
+                        ]
+                      + Condition = {
+                          + ArnEquals = {
+                              + "kms:EncryptionContext:aws:logs:arn" = "arn:aws:logs:us-east-1:000000000000:log-group:/healthqueue/local/api"
+                            }
+                        }
+                      + Effect    = "Allow"
+                      + Principal = {
+                          + Service = "logs.us-east-1.amazonaws.com"
+                        }
+                      + Resource  = "*"
+                      + Sid       = "AllowCloudWatchLogsForThisLogGroup"
+                    },
+                ]
+              + Version   = "2012-10-17"
+            }
+        )
+      + region                             = "us-east-1"
+      + rotation_period_in_days            = (known after apply)
+      + tags_all                           = {
+          + "Environment" = "local"
+          + "ManagedBy"   = "opentofu"
+          + "Project"     = "healthqueue"
+          + "Target"      = "localstack"
+        }
+    }
+
+  # module.platform.aws_s3_bucket.evidence will be created
+  + resource "aws_s3_bucket" "evidence" {
+      + acceleration_status         = (known after apply)
+      + acl                         = (known after apply)
+      + arn                         = (known after apply)
+      + bucket                      = "healthqueue-local-evidence-000000000000"
+      + bucket_domain_name          = (known after apply)
+      + bucket_namespace            = (known after apply)
+      + bucket_prefix               = (known after apply)
+      + bucket_region               = (known after apply)
+      + bucket_regional_domain_name = (known after apply)
+      + force_destroy               = false
+      + hosted_zone_id              = (known after apply)
+      + id                          = (known after apply)
+      + object_lock_enabled         = (known after apply)
+      + policy                      = (known after apply)
+      + region                      = "us-east-1"
+      + request_payer               = (known after apply)
+      + tags_all                    = {
+          + "Environment" = "local"
+          + "ManagedBy"   = "opentofu"
+          + "Project"     = "healthqueue"
+          + "Target"      = "localstack"
+        }
+      + website_domain              = (known after apply)
+      + website_endpoint            = (known after apply)
+
+      + cors_rule (known after apply)
+
+      + grant (known after apply)
+
+      + lifecycle_rule (known after apply)
+
+      + logging (known after apply)
+
+      + object_lock_configuration (known after apply)
+
+      + replication_configuration (known after apply)
+
+      + server_side_encryption_configuration (known after apply)
+
+      + versioning (known after apply)
+
+      + website (known after apply)
+    }
+
+  # module.platform.aws_s3_bucket_lifecycle_configuration.evidence will be created
+  + resource "aws_s3_bucket_lifecycle_configuration" "evidence" {
+      + bucket                                 = (known after apply)
+      + expected_bucket_owner                  = (known after apply)
+      + id                                     = (known after apply)
+      + region                                 = "us-east-1"
+      + transition_default_minimum_object_size = "all_storage_classes_128K"
+
+      + rule {
+          + id     = "tier-and-expire-evidence"
+          + status = "Enabled"
+
+          + abort_incomplete_multipart_upload {
+              + days_after_initiation = 7
+            }
+
+          + filter {
+            }
+
+          + noncurrent_version_expiration {
+              + noncurrent_days = 365
+            }
+
+          + transition {
+              + days          = 90
+              + storage_class = "STANDARD_IA"
+            }
+        }
+    }
+
+  # module.platform.aws_s3_bucket_ownership_controls.evidence will be created
+  + resource "aws_s3_bucket_ownership_controls" "evidence" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+      + region = "us-east-1"
+
+      + rule {
+          + object_ownership = "BucketOwnerEnforced"
+        }
+    }
+
+  # module.platform.aws_s3_bucket_policy.evidence will be created
+  + resource "aws_s3_bucket_policy" "evidence" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+      + policy = (known after apply)
+      + region = "us-east-1"
+    }
+
+  # module.platform.aws_s3_bucket_public_access_block.evidence will be created
+  + resource "aws_s3_bucket_public_access_block" "evidence" {
+      + block_public_acls       = true
+      + block_public_policy     = true
+      + bucket                  = (known after apply)
+      + id                      = (known after apply)
+      + ignore_public_acls      = true
+      + region                  = "us-east-1"
+      + restrict_public_buckets = true
+    }
+
+  # module.platform.aws_s3_bucket_server_side_encryption_configuration.evidence will be created
+  + resource "aws_s3_bucket_server_side_encryption_configuration" "evidence" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+      + region = "us-east-1"
+
+      + rule {
+          + blocked_encryption_types = (known after apply)
+          + bucket_key_enabled       = true
+
+          + apply_server_side_encryption_by_default {
+              + kms_master_key_id = (known after apply)
+              + sse_algorithm     = "aws:kms"
+            }
+        }
+    }
+
+  # module.platform.aws_s3_bucket_versioning.evidence will be created
+  + resource "aws_s3_bucket_versioning" "evidence" {
+      + bucket = (known after apply)
+      + id     = (known after apply)
+      + region = "us-east-1"
+
+      + versioning_configuration {
+          + mfa_delete = (known after apply)
+          + status     = "Enabled"
+        }
+    }
+
+Plan: 13 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  + api_log_group_name   = "/healthqueue/local/api"
+  + evidence_bucket_name = "healthqueue-local-evidence-000000000000"
+
+─────────────────────────────────────────────────────────────────────────────
+
+Saved the plan to: localstack.tfplan
+
+To perform exactly these actions, run the following command to apply:
+    tofu apply "localstack.tfplan"

@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Local runtime data and secrets - never commit
+data/*.db
+data/*.db-*
+.env
+.local/
+*.key
+!reports/supply-chain/cosign-local-test.pub
+.kube/
+*.kubeconfig
+
+# OpenTofu / Terraform state and caches - state may contain secrets
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+# Lock files ARE committed (they pin provider checksums)
+!.terraform.lock.hcl
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+~$*.xlsx
+# Reusable modules are locked by the root configurations that call them
+infra/modules/**/.terraform.lock.hcl

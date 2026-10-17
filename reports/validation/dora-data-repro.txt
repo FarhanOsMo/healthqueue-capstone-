@@ -1,0 +1,1 @@
+Wrote 124 synthetic deployments (14 failed) to reports\validation\dora-regen.csv covering 2026-07-01 .. 2026-09-28 (seed 20261025).

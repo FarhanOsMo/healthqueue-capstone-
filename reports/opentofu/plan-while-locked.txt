@@ -1,0 +1,23 @@
+Acquiring state lock. This may take a few moments...
+
+Error: Error acquiring the state lock
+
+Error message: operation error S3: PutObject, https response error
+StatusCode: 412, RequestID: 8f25361b-aeb3-4f8a-a5c9-fc4a817958cd, HostID:
+s9lzHYrFp76ZVxRcpX9+5cjAnEH2ROuNkd2BHfIa6UkFVdtjf5mKR3/eTPFvsiP/XV/VLi31234=,
+api error PreconditionFailed: At least one of the pre-conditions you
+specified did not hold
+Lock Info:
+  ID:        11111111-2222-3333-4444-555555555555
+  Path:      healthqueue-tfstate-local/healthqueue/local/platform.tfstate
+  Operation: OperationTypeApply
+  Who:       teammate@laptop
+  Version:   1.12.6
+  Created:   2026-10-17 00:00:00 +0000 UTC
+  Info:      
+
+
+OpenTofu acquires a state lock to protect the state from being written
+by multiple users at the same time. Please resolve the issue above and try
+again. For most commands, you can disable locking with the "-lock=false"
+flag, but this is not recommended.

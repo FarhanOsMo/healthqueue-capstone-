@@ -1,0 +1,19 @@
+# module.platform.data.aws_iam_policy_document.evidence_bucket will be read during apply
+# (config refers to values not yet known)
+# module.platform.data.aws_iam_policy_document.evidence_upload will be read during apply
+# (config refers to values not yet known)
+# module.platform.data.aws_iam_policy_document.github_trust will be read during apply
+# (config refers to values not yet known)
+# module.platform.aws_cloudwatch_log_group.api will be created
+# module.platform.aws_iam_openid_connect_provider.github[0] will be created
+# module.platform.aws_iam_role.github_evidence_uploader will be created
+# module.platform.aws_iam_role_policy.evidence_upload will be created
+# module.platform.aws_kms_alias.platform will be created
+# module.platform.aws_kms_key.platform will be created
+# module.platform.aws_s3_bucket.evidence will be created
+# module.platform.aws_s3_bucket_lifecycle_configuration.evidence will be created
+# module.platform.aws_s3_bucket_ownership_controls.evidence will be created
+# module.platform.aws_s3_bucket_policy.evidence will be created
+# module.platform.aws_s3_bucket_public_access_block.evidence will be created
+# module.platform.aws_s3_bucket_server_side_encryption_configuration.evidence will be created
+# module.platform.aws_s3_bucket_versioning.evidence will be created

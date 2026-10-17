@@ -1,0 +1,205 @@
+# CI - runs on every pull request and every push to main.
+#
+# Trust model: this workflow handles UNTRUSTED code (pull requests, including
+# from forks). It therefore has read-only permissions, no secrets, no OIDC
+# token and never pushes or signs anything. Publishing happens only in
+# release.yml, which runs on protected tags.
+#
+# Cost: public repository + GitHub-hosted standard runners = free GitHub
+# Actions minutes (see docs/COST_AND_PREREQUISITES.md). Concurrency cancels
+# superseded runs so pushes in quick succession do not waste minutes.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.13"
+  TRIVY_IMAGE: aquasec/trivy:0.76.0@sha256:2416d1f74045b57274df1a340eee6b510cacd73c66a6ccb8da092b117eb7d222
+  KUBECONFORM_IMAGE: ghcr.io/yannh/kubeconform:latest@sha256:faffaf43f95aa6425306e1ab8d6fcad72acb9049158f38e574c085ea1ec0f64e
+  ACTIONLINT_IMAGE: rhysd/actionlint:latest@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+  HADOLINT_IMAGE: hadolint/hadolint:latest@sha256:32dac94127fd60b7b7e3fbfc65e1383b9b5e25c9bfd7b8536de7a539fe68a12d
+  PROMETHEUS_IMAGE: prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e
+
+jobs:
+  # ------------------------------------------------------------------ 1 ---
+  test:
+    name: Lint, test, SAST, dependency audit
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
+        env:
+          POSTGRES_USER: hq
+          POSTGRES_PASSWORD: ci-only-throwaway # ephemeral service container, not a secret
+          POSTGRES_DB: healthqueue
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U hq -d healthqueue"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements*.txt
+      - name: Install dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: Ruff lint
+        run: ruff check .
+      - name: Ruff format check
+        run: ruff format --check .
+      - name: Bandit (static security analysis)
+        run: bandit -r app -c pyproject.toml
+      - name: pip-audit (known-vulnerable dependencies)
+        run: pip-audit -r requirements.txt
+      - name: Pytest (unit + API + Postgres integration, coverage gate 85%)
+        env:
+          TEST_POSTGRES_URL: postgresql://hq:ci-only-throwaway@localhost:5432/healthqueue
+        run: python -m pytest --cov --cov-report=xml --junitxml=junit.xml
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-reports
+          path: |
+            junit.xml
+            coverage.xml
+          retention-days: 14
+
+  # ------------------------------------------------------------------ 2 ---
+  config-validate:
+    name: Validate YAML, workflows, Kubernetes manifests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: yamllint
+        run: pip install yamllint==1.38.0 && yamllint -s .
+      - name: actionlint (GitHub Actions workflow linter)
+        run: docker run --rm -v "$PWD:/repo" -w /repo "$ACTIONLINT_IMAGE" -color
+      - name: hadolint (Dockerfile best practices)
+        run: docker run --rm -i "$HADOLINT_IMAGE" < Dockerfile
+      - name: promtool - SLO rules syntax + alert unit tests
+        run: |
+          docker run --rm -v "$PWD:/w" -w /w --entrypoint promtool "$PROMETHEUS_IMAGE" \
+            check rules observability/prometheus/slo-rules.yaml
+          docker run --rm -v "$PWD:/w" -w /w --entrypoint promtool "$PROMETHEUS_IMAGE" \
+            test rules tests/prometheus/slo-rules.test.yaml
+      - name: Render Kustomize overlays
+        run: |
+          mkdir -p rendered
+          for o in local production; do
+            kubectl kustomize "deploy/k8s/overlays/$o" > "rendered/$o.yaml"
+          done
+      - name: kubeconform (strict schema validation)
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work "$KUBECONFORM_IMAGE" \
+            -strict -summary -kubernetes-version 1.33.0 rendered/local.yaml rendered/production.yaml
+
+  # ------------------------------------------------------------------ 3 ---
+  iac:
+    name: OpenTofu validate + IaC scan + LocalStack plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    services:
+      localstack:
+        # Community 3.8 is pinned: newer "latest" images require a paid auth token.
+        image: localstack/localstack:3.8
+        env:
+          SERVICES: s3,sts,iam,kms,logs
+        ports: ["4566:4566"]
+        options: >-
+          --health-cmd "curl -sf http://localhost:4566/_localstack/health"
+          --health-interval 5s --health-timeout 5s --health-retries 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: 1.12.6
+          tofu_wrapper: false
+      - name: tofu fmt
+        run: tofu -chdir=infra fmt -recursive -check
+      - name: tofu validate (all roots, no backend, no credentials)
+        run: |
+          for d in modules/healthqueue-platform environments/aws-production environments/localstack bootstrap; do
+            tofu -chdir="infra/$d" init -backend=false -input=false
+            tofu -chdir="infra/$d" validate
+          done
+      - name: Trivy IaC misconfiguration scan (fail on HIGH/CRITICAL)
+        run: |
+          docker run --rm -v "$PWD:/work" -w /work "$TRIVY_IMAGE" config \
+            --skip-dirs "**/.terraform" --severity HIGH,CRITICAL --exit-code 1 .
+      - name: Create LocalStack state bucket (AWS CLI against LocalStack only)
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+        run: |
+          aws --endpoint-url http://localhost:4566 s3 mb s3://healthqueue-tfstate-local
+          aws --endpoint-url http://localhost:4566 s3api put-bucket-versioning \
+            --bucket healthqueue-tfstate-local --versioning-configuration Status=Enabled
+      - name: tofu init (S3 remote state on LocalStack) + plan  [never apply]
+        working-directory: infra/environments/localstack
+        run: |
+          tofu init -input=false -backend-config=backend.hcl
+          tofu plan -input=false -lock=true -no-color | tee plan.txt
+          grep -E "^Plan: [0-9]+ to add, 0 to change, 0 to destroy" plan.txt
+
+  # ------------------------------------------------------------------ 4 ---
+  image:
+    name: Build image, Trivy gate, SBOM (no push, no signing)
+    needs: [test]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build image (loaded into the runner's Docker only)
+        run: docker build --build-arg APP_VERSION="0.0.0-ci.${GITHUB_SHA::7}" -t healthqueue-api:ci .
+      - name: Trivy vulnerability scan - report
+        run: |
+          mkdir -p reports
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock -v "$PWD/reports:/out" \
+            "$TRIVY_IMAGE" image --scanners vuln --format json --output /out/trivy.json healthqueue-api:ci
+      - name: Trivy vulnerability gate (fail on fixable HIGH/CRITICAL)
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock "$TRIVY_IMAGE" image \
+            --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 healthqueue-api:ci
+      - name: Syft SBOM (SPDX JSON)
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: healthqueue-api:ci
+          format: spdx-json
+          output-file: reports/sbom.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+      - name: Upload scan report + SBOM
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: image-security-reports
+          path: reports/
+          retention-days: 14
