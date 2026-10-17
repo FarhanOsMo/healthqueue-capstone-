@@ -71,7 +71,7 @@ jobs:
       - name: Pytest (unit + API + Postgres integration, coverage gate 85%)
         env:
           TEST_POSTGRES_URL: postgresql://hq:ci-only-throwaway@localhost:5432/healthqueue
-        run: python -m pytest --cov --cov-report=xml --junitxml=junit.xml
+        run: python -m pytest --cov --cov-fail-under=85 --cov-report=xml --junitxml=junit.xml
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

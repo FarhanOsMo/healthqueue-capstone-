@@ -1,4 +1,4 @@
-"""Check that every relative link in the repository's Markdown files points to an existing file/anchor-free path."""
+"""Check that every relative link in the repository's Markdown files points to an existing path."""
 
 from __future__ import annotations
 

@@ -13,8 +13,8 @@ source = ["app"]
 branch = true
 
 [tool.coverage.report]
+# The 85% gate is enforced in CI (--cov-fail-under=85), where the PostgreSQL test always runs.
 show_missing = true
-fail_under = 85
 
 [tool.ruff]
 line-length = 100
