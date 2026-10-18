@@ -92,6 +92,8 @@ supply-chain/DORA/cost/readiness docs, rubric mapping, video outline, validation
 8. GitOps verify script had a stale-value wait loop -> fixed; added a positive-control probe for the NetworkPolicy test.
 9. **Local load test found a latency SLO breach (85.4% ≤ 300 ms)** -> connection pool in v0.1.1 -> 100% after a GitOps rollout.
 10. DORA finding text claimed a single top failure cause while two were tied -> corrected; removed an unsupported claim.
+13. Flaky PostgreSQL test found (2/40 failures on a reused DB: leftover rows + 3-digit pseudo-unique ID) -> each run
+    now gets an isolated, auto-dropped schema -> 0/40 failures.
 12. Pushed with approval; first GitHub CI run failed on one ruff E501 in `scripts/check_links.py` (added after the
     last local lint) -> fixed; coverage gate moved into CI where PostgreSQL always runs -> CI green.
 11. Secret scan initially scanned git-ignored local secrets -> now scans exactly the committable files; one public GPG

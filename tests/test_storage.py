@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import threading
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -71,11 +72,39 @@ def test_build_store_rejects_unknown_scheme():
         build_store("mysql://nope")
 
 
-@pytest.mark.skipif(not os.getenv("TEST_POSTGRES_URL"), reason="TEST_POSTGRES_URL not set")
-def test_postgres_backend_roundtrip_and_conflict():
-    pg = build_store(os.environ["TEST_POSTGRES_URL"])
-    assert pg.ping()
-    created = pg.create(_req(provider="PRV-9" + datetime.now(UTC).strftime("%S%f")[:3]))
-    assert pg.get(created.id).id == created.id
+@pytest.fixture
+def pg_store():
+    """A PostgresStore in its own throwaway schema, dropped afterwards.
+
+    Isolation matters: the test database may be reused between runs, and rows
+    left by an earlier run must never be able to cause a false 409 conflict.
+    """
+    url = os.getenv("TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("TEST_POSTGRES_URL not set")
+    import psycopg
+    from psycopg import sql
+
+    schema = f"test_{uuid.uuid4().hex[:12]}"
+    with psycopg.connect(url, autocommit=True) as conn:
+        conn.execute(sql.SQL("CREATE SCHEMA {}").format(sql.Identifier(schema)))
+    sep = "&" if "?" in url else "?"
+    store = build_store(f"{url}{sep}options=-c%20search_path%3D{schema}")
+    try:
+        yield store
+    finally:
+        store.close()
+        with psycopg.connect(url, autocommit=True) as conn:
+            conn.execute(sql.SQL("DROP SCHEMA {} CASCADE").format(sql.Identifier(schema)))
+
+
+def test_postgres_backend_roundtrip_and_conflict(pg_store):
+    assert pg_store.ping()
+    created = pg_store.create(_req(provider="PRV-9001"))
+    assert pg_store.get(created.id) == created
     with pytest.raises(SlotConflictError):
-        pg.create(_req(provider=created.provider_id, start_offset_min=15))
+        pg_store.create(_req(provider="PRV-9001", start_offset_min=15))
+    # back-to-back slot for the same provider is fine; listing filters by clinic
+    pg_store.create(_req(provider="PRV-9001", start_offset_min=30))
+    assert len(pg_store.list("CLN-001", 10)) == 2
+    assert pg_store.list("CLN-999", 10) == []

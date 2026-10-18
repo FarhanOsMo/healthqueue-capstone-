@@ -10,9 +10,10 @@
 
 | Test | Status | Evidence |
 |---|---|---|
-| Unit + API + validation + observability + storage + report tests | **PASSED** - 53 passed, coverage 94.08% (gate 85%) | `validation/pytest.txt` |
+| Unit + API + validation + observability + storage + report tests | **PASSED** - 53 passed, coverage 95.73% (gate 85%) | `validation/pytest.txt` |
 | PostgreSQL integration test (real postgres:17 container) | **PASSED** (part of the 53, `TEST_POSTGRES_URL` set) | `validation/pytest.txt` |
 | Concurrency: 10 parallel bookings, same slot -> exactly 1 succeeds | **PASSED** | `tests/test_storage.py` |
+| Flaky-test check: PostgreSQL test run 40x against a reused database | **PASSED** 40/40 after fix (before: **FAILED 2/40** - test reused leftover rows and a 3-digit pseudo-unique provider ID, causing false 409s; now each run uses its own throwaway schema) | `tests/test_storage.py::pg_store` |
 | Input validation (10 invalid-field cases, extra field, past/far time, non-JSON, timezone) | **PASSED** | `tests/test_validation.py` |
 | Failure handling: 500 hides internals; 503 readiness; 404/409/422 | **PASSED** | `tests/test_api.py` |
 | Lint / format (ruff) | **PASSED** | `validation/ruff-*.txt` |

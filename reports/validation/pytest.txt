@@ -9,7 +9,7 @@ collected 53 items
 tests\test_api.py ...............                                        [ 28%]
 tests\test_observability.py ......                                       [ 39%]
 tests\test_reports.py ..........                                         [ 58%]
-tests\test_storage.py .....s                                             [ 69%]
+tests\test_storage.py ......                                             [ 69%]
 tests\test_validation.py ................                                [100%]
 
 ============================== warnings summary ===============================
@@ -32,9 +32,7 @@ app\config.py             21      1      2      1    91%   18
 app\main.py              108      0     12      1    99%   101->103
 app\models.py             59      0      8      0   100%
 app\observability.py      51      3     14      2    92%   110-112, 114
-app\storage.py           131     49     16      3    61%   165, 173-174, 197-217, 220-243, 248, 252, 265-301, 304-307, 310-316, 319-325, 328, 333, 335
+app\storage.py           131      7     16      3    93%   165, 173-174, 315, 324-325, 333
 ------------------------------------------------------------------
-TOTAL                    370     53     52      7    84%
-=========================== short test summary info ===========================
-SKIPPED [1] tests\test_storage.py:74: TEST_POSTGRES_URL not set
-================== 52 passed, 1 skipped, 2 warnings in 4.29s ==================
+TOTAL                    370     11     52      7    96%
+======================= 53 passed, 2 warnings in 2.45s ========================
